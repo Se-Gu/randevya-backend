@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Request,
 } from '@nestjs/common';
 import { SalonsService } from './salons.service';
 import { CreateSalonDto } from './dto/create-salon.dto';
@@ -83,5 +84,15 @@ export class SalonsController {
   @ApiResponse({ status: 404, description: 'Salon not found.' })
   remove(@Param('id') id: string) {
     return this.salonsService.remove(id);
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current salon details' })
+  @ApiResponse({ status: 200, description: 'Return the current salon.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  getMe(@Request() req) {
+    return this.salonsService.findOne(req.user.salonId);
   }
 }

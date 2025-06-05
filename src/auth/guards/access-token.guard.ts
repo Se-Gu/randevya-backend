@@ -8,7 +8,7 @@ import { AppointmentsService } from '../../appointments/appointments.service';
 
 @Injectable()
 export class AccessTokenGuard implements CanActivate {
-  constructor(private appointmentsService: AppointmentsService) {}
+  constructor(private readonly appointmentsService: AppointmentsService) {}
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const request = context.switchToHttp().getRequest();

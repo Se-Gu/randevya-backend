@@ -17,7 +17,6 @@ import {
   ApiOperation,
   ApiResponse,
   ApiBearerAuth,
-  ApiParam,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { AccessTokenGuard } from '../auth/guards/access-token.guard';

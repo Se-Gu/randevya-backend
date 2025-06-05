@@ -55,5 +55,5 @@ export class CreateSalonDto {
   @ValidateNested({ each: true })
   @Type(() => WeeklyAvailability)
   @IsOptional()
-  availability?: WeeklyAvailability[];
+  weeklyAvailability?: WeeklyAvailability[];
 }

@@ -9,7 +9,7 @@ import { UpdateStaffDto } from './dto/update-staff.dto';
 export class StaffService {
   constructor(
     @InjectRepository(Staff)
-    private staffRepository: Repository<Staff>,
+    private readonly staffRepository: Repository<Staff>,
   ) {}
 
   async create(createStaffDto: CreateStaffDto): Promise<Staff> {

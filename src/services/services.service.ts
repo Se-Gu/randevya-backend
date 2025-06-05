@@ -9,7 +9,7 @@ import { UpdateServiceDto } from './dto/update-service.dto';
 export class ServicesService {
   constructor(
     @InjectRepository(Service)
-    private serviceRepository: Repository<Service>,
+    private readonly serviceRepository: Repository<Service>,
   ) {}
 
   async create(createServiceDto: CreateServiceDto): Promise<Service> {

@@ -10,7 +10,7 @@ import { v4 as uuidv4 } from 'uuid';
 export class AppointmentsService {
   constructor(
     @InjectRepository(Appointment)
-    private appointmentRepository: Repository<Appointment>,
+    private readonly appointmentRepository: Repository<Appointment>,
   ) {}
 
   async create(

@@ -10,9 +10,9 @@ import { Service } from '../services/entities/service.entity';
 export class SalonsService {
   constructor(
     @InjectRepository(Salon)
-    private salonRepository: Repository<Salon>,
+    private readonly salonRepository: Repository<Salon>,
     @InjectRepository(Service)
-    private servicesRepository: Repository<Service>,
+    private readonly servicesRepository: Repository<Service>,
   ) {}
 
   async create(createSalonDto: CreateSalonDto): Promise<Salon> {

@@ -94,7 +94,7 @@ export class Appointment {
     example: 'svc1a2b3-c4d5-e6f7-g8h9-i0j1k2l3m4n5',
     description: 'ID of the service for the appointment',
   })
-  @Column('uuid')
+  @Column('uuid', { nullable: true })
   serviceId: string;
 
   @ManyToOne(() => Service, (service) => service.appointments, {
