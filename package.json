@@ -24,6 +24,9 @@
     "migration:revert": "npm run typeorm migration:revert",
     "seed:system-admin": "ts-node src/database/run-seed.ts"
   },
+  "engines": {
+    "node": ">=20"
+  },
   "dependencies": {
     "@nestjs/common": "^11.0.1",
     "@nestjs/config": "^4.0.2",
