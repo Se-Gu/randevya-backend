@@ -4,18 +4,19 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import databaseConfig from './config/database.config';
-// TODO: Create and implement these modules
-// import { UsersModule } from './users/users.module';
-// import { SalonsModule } from './salons/salons.module';
-// import { ServicesModule } from './services/services.module';
-// import { StaffModule } from './staff/staff.module';
-// import { AppointmentsModule } from './appointments/appointments.module';
+import { UsersModule } from './users/users.module';
+import { SalonsModule } from './salons/salons.module';
+import { ServicesModule } from './services/services.module';
+import { StaffModule } from './staff/staff.module';
+import { AppointmentsModule } from './appointments/appointments.module';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
   imports: [
     ConfigModule.forRoot({
       isGlobal: true,
       load: [databaseConfig],
+      envFilePath: '.env.local',
     }),
     TypeOrmModule.forRootAsync({
       imports: [ConfigModule],
@@ -25,11 +26,12 @@ import databaseConfig from './config/database.config';
       },
       inject: [ConfigService],
     }),
-    // UsersModule,
-    // SalonsModule,
-    // ServicesModule,
-    // StaffModule,
-    // AppointmentsModule,
+    AuthModule,
+    UsersModule,
+    SalonsModule,
+    ServicesModule,
+    StaffModule,
+    AppointmentsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

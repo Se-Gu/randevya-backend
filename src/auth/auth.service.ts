@@ -3,6 +3,8 @@ import { JwtService } from '@nestjs/jwt';
 import { UsersService } from '../users/users.service';
 import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
+import { JwtPayload } from 'jsonwebtoken';
+import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class AuthService {
@@ -44,16 +46,14 @@ export class AuthService {
     };
   }
 
-  async validateUser(payload: any) {
-    const user = await this.usersService.findById(payload.sub);
-    if (!user) {
-      throw new UnauthorizedException();
+  async validateUser(payload: JwtPayload): Promise<User> {
+    if (!payload.sub) {
+      throw new UnauthorizedException('Invalid token payload');
     }
-    return {
-      id: user.id,
-      email: user.email,
-      role: user.role,
-      salonId: user.salonId,
-    };
+    const user = await this.usersService.findOne(payload.sub);
+    if (!user) {
+      throw new UnauthorizedException('Invalid token');
+    }
+    return user;
   }
 }

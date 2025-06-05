@@ -3,10 +3,9 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { StaffService } from './staff.service';
 import { StaffController } from './staff.controller';
 import { Staff } from './entities/staff.entity';
-import { SalonsModule } from '../salons/salons.module';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Staff]), SalonsModule],
+  imports: [TypeOrmModule.forFeature([Staff])],
   controllers: [StaffController],
   providers: [StaffService],
   exports: [StaffService],

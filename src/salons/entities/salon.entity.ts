@@ -7,68 +7,71 @@ import {
   OneToMany,
 } from 'typeorm';
 import { ApiProperty } from '@nestjs/swagger';
-import { Location } from '../../shared/classes/location.class';
-import { WeeklyAvailability } from '../../shared/classes/weekly-availability.class';
-import { User } from '../../users/entities';
-import { Service } from '../../services/entities';
-import { Staff } from '../../staff/entities';
-import { Appointment } from '../../appointments/entities';
+import { Service } from '../../services/entities/service.entity';
+import { Staff } from '../../staff/entities/staff.entity';
+import { WeeklyAvailability } from '../../shared/types/weekly-availability.type';
+import { Appointment } from '../../appointments/entities/appointment.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('salons')
 export class Salon {
   @ApiProperty({
-    example: 's1a2l3o4-n5i6-d789-0123-456789abcdef',
+    example: 'a1b2c3d4-e5f6-7890-1234-567890abcdef',
     description: 'Unique identifier for the salon',
   })
   @PrimaryGeneratedColumn('uuid')
   id: string;
 
-  @ApiProperty({
-    example: 'Chic Cuts & Styles',
-    description: 'Name of the salon',
-  })
+  @ApiProperty({ example: 'Hair Studio', description: 'Name of the salon' })
   @Column()
   name: string;
 
   @ApiProperty({
-    example: '+15551234567',
-    description: 'Contact phone number for the salon',
+    example: '+1234567890',
+    description: 'Phone number of the salon',
   })
   @Column()
   phone: string;
 
   @ApiProperty({
-    example: 'contact@chiccuts.com',
-    description: 'Contact email for the salon',
+    example: 'salon@example.com',
+    description: 'Email of the salon',
   })
-  @Column({ unique: true })
+  @Column()
   email: string;
 
   @ApiProperty({
-    type: () => Location,
-    description: 'Physical location of the salon',
+    example: {
+      address: '123 Main St, City, Country',
+      lat: 40.7128,
+      lng: -74.006,
+    },
+    description: 'Location of the salon',
   })
-  @Column({ type: 'jsonb' })
-  location: Location;
+  @Column('jsonb')
+  location: {
+    address: string;
+    lat: number;
+    lng: number;
+  };
 
   @ApiProperty({
-    type: () => [WeeklyAvailability],
-    description: 'General weekly availability of the salon',
+    description: 'Weekly availability of the salon',
   })
-  @Column({ type: 'jsonb', array: false, default: () => "'[]'" })
-  availability: WeeklyAvailability[];
-
-  @OneToMany(() => User, (user) => user.salon)
-  users: User[];
+  @Column('jsonb')
+  weeklyAvailability: WeeklyAvailability[];
 
   @OneToMany(() => Service, (service) => service.salon)
   services: Service[];
 
   @OneToMany(() => Staff, (staff) => staff.salon)
-  staffMembers: Staff[];
+  staff: Staff[];
 
   @OneToMany(() => Appointment, (appointment) => appointment.salon)
   appointments: Appointment[];
+
+  @OneToMany(() => User, (user) => user.salon)
+  users: User[];
 
   @ApiProperty()
   @CreateDateColumn()
