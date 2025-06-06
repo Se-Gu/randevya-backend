@@ -5,6 +5,7 @@ import { LoginDto } from './dto/login.dto';
 import * as bcrypt from 'bcrypt';
 import { JwtPayload } from 'jsonwebtoken';
 import { User } from '../users/entities/user.entity';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 
 @Injectable()
 export class AuthService {
@@ -55,5 +56,10 @@ export class AuthService {
       throw new UnauthorizedException('Invalid token');
     }
     return user;
+  }
+
+  async register(createUserDto: CreateUserDto) {
+    const user = await this.usersService.create(createUserDto);
+    return this.login({ email: user.email, password: createUserDto.password });
   }
 }

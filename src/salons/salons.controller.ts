@@ -26,9 +26,7 @@ export class SalonsController {
   constructor(private readonly salonsService: SalonsService) {}
 
   @Post()
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Create a new salon (admin only)' })
+  @ApiOperation({ summary: 'Create a new salon' })
   @ApiResponse({ status: 201, description: 'Salon successfully created.' })
   @ApiResponse({ status: 400, description: 'Bad request.' })
   create(@Body() createSalonDto: CreateSalonDto) {

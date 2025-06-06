@@ -22,10 +22,10 @@ export class CreateSalonDto {
   name: string;
 
   @ApiProperty({
-    example: '+15551234567',
+    example: '+905551234567',
     description: 'Contact phone number for the salon',
   })
-  @IsPhoneNumber('US')
+  @IsPhoneNumber('TR')
   @IsNotEmpty()
   phone: string;
 
