@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { StaffService } from './staff.service';
 import { CreateStaffDto } from './dto/create-staff.dto';
@@ -18,6 +19,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { StaffCalendarGuard } from '../auth/guards/staff-calendar.guard';
 
 @ApiTags('staff')
 @Controller('staff')
@@ -54,6 +56,19 @@ export class StaffController {
   @ApiResponse({ status: 404, description: 'Staff member not found.' })
   findOne(@Param('id') id: string) {
     return this.staffService.findOne(id);
+  }
+
+  @Get(':id/calendar')
+  @UseGuards(AuthGuard('jwt'), StaffCalendarGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get staff calendar' })
+  @ApiResponse({ status: 200, description: 'Return staff booked slots.' })
+  getCalendar(
+    @Param('id') id: string,
+    @Query('range') range: 'day' | 'week' | 'month' = 'day',
+    @Query('date') date: string,
+  ) {
+    return this.staffService.getBookedSlots(id, range, date);
   }
 
   @Get('salon/:salonId')
