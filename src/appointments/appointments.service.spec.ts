@@ -3,12 +3,14 @@ import { getRepositoryToken } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { AppointmentsService } from './appointments.service';
 import { Appointment } from './entities/appointment.entity';
-import { NotFoundException } from '@nestjs/common';
+import { NotFoundException, BadRequestException } from '@nestjs/common';
+import { Staff } from '../staff/entities';
 import { AppointmentStatus } from '../shared/enums/appointment-status.enum';
 
 describe('AppointmentsService', () => {
   let service: AppointmentsService;
   let appointmentRepository: Repository<Appointment>;
+  let staffRepository: Repository<Staff>;
 
   const mockAppointment = {
     id: '1',
@@ -31,14 +33,39 @@ describe('AppointmentsService', () => {
       .mockImplementation((appointment) =>
         Promise.resolve({ id: '1', ...appointment }),
       ),
-    findOne: jest.fn().mockImplementation(({ where: { id } }) => {
-      if (id === '1') {
-        return Promise.resolve(mockAppointment);
+    findOne: jest.fn().mockImplementation(({ where }) => {
+      if (where.id) {
+        return where.id === '1' ? Promise.resolve(mockAppointment) : Promise.resolve(null);
       }
       return Promise.resolve(null);
     }),
     find: jest.fn().mockResolvedValue([mockAppointment]),
     remove: jest.fn().mockResolvedValue(true),
+  };
+
+  const mockStaff = {
+    id: 'staff-1',
+    salonId: 'salon-1',
+    workingHours: [
+      {
+        day: 'Wednesday',
+        slots: [
+          {
+            start: '14:00',
+            end: '15:00',
+          },
+        ],
+      },
+    ],
+  };
+
+  const mockStaffRepository = {
+    findOne: jest.fn().mockImplementation(({ where: { id } }) => {
+      if (id === 'staff-1') {
+        return Promise.resolve(mockStaff);
+      }
+      return Promise.resolve(null);
+    }),
   };
 
   beforeEach(async () => {
@@ -49,6 +76,10 @@ describe('AppointmentsService', () => {
           provide: getRepositoryToken(Appointment),
           useValue: mockAppointmentRepository,
         },
+        {
+          provide: getRepositoryToken(Staff),
+          useValue: mockStaffRepository,
+        },
       ],
     }).compile();
 
@@ -56,6 +87,7 @@ describe('AppointmentsService', () => {
     appointmentRepository = module.get<Repository<Appointment>>(
       getRepositoryToken(Appointment),
     );
+    staffRepository = module.get<Repository<Staff>>(getRepositoryToken(Staff));
   });
 
   it('should be defined', () => {
@@ -76,11 +108,91 @@ describe('AppointmentsService', () => {
       };
 
       const result = await service.create(createAppointmentDto);
-      expect(result).toEqual({ id: '1', ...createAppointmentDto });
-      expect(appointmentRepository.create).toHaveBeenCalledWith(
-        createAppointmentDto,
-      );
+      expect(result).toEqual({
+        id: '1',
+        ...createAppointmentDto,
+        accessToken: expect.any(String),
+      });
+      expect(appointmentRepository.create).toHaveBeenCalledWith({
+        ...createAppointmentDto,
+        accessToken: expect.any(String),
+      });
       expect(appointmentRepository.save).toHaveBeenCalled();
+    });
+
+    it('should throw NotFoundException if staff does not exist', async () => {
+      const dto = {
+        customerName: 'John Doe',
+        customerPhone: '+1234567890',
+        date: '2024-03-20',
+        time: '14:30',
+        salonId: 'salon-1',
+        serviceId: 'service-1',
+        staffId: 'missing',
+      };
+
+      await expect(service.create(dto)).rejects.toThrow(NotFoundException);
+    });
+
+    it('should throw BadRequestException if staff belongs to another salon', async () => {
+      mockStaffRepository.findOne.mockResolvedValueOnce({ ...mockStaff, salonId: 'other' });
+
+      const dto = {
+        customerName: 'John Doe',
+        customerPhone: '+1234567890',
+        date: '2024-03-20',
+        time: '14:30',
+        salonId: 'salon-1',
+        serviceId: 'service-1',
+        staffId: 'staff-1',
+      };
+
+      await expect(service.create(dto)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if time is outside working hours', async () => {
+      mockStaffRepository.findOne.mockResolvedValueOnce({
+        ...mockStaff,
+        workingHours: [
+          {
+            day: 'Wednesday',
+            slots: [{ start: '10:00', end: '11:00' }],
+          },
+        ],
+      });
+
+      const dto = {
+        customerName: 'John Doe',
+        customerPhone: '+1234567890',
+        date: '2024-03-20',
+        time: '14:30',
+        salonId: 'salon-1',
+        serviceId: 'service-1',
+        staffId: 'staff-1',
+      };
+
+      await expect(service.create(dto)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should throw BadRequestException if appointment conflicts', async () => {
+      mockAppointmentRepository.findOne.mockImplementationOnce(({ where }) => {
+        if (where && where.staffId) {
+          return Promise.resolve(mockAppointment);
+        }
+        return Promise.resolve(null);
+      });
+
+      const dto = {
+        customerName: 'John Doe',
+        customerPhone: '+1234567890',
+        date: '2024-03-20',
+        time: '14:30',
+        salonId: 'salon-1',
+        serviceId: 'service-1',
+        staffId: 'staff-1',
+      };
+
+      await expect(service.create(dto)).rejects.toThrow(BadRequestException);
     });
   });
 
