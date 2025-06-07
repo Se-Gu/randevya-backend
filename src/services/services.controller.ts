@@ -18,6 +18,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { OwnerGuard } from '../auth/guards/owner.guard';
 
 @ApiTags('services')
 @Controller('services')
@@ -25,7 +26,7 @@ export class ServicesController {
   constructor(private readonly servicesService: ServicesService) {}
 
   @Post()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OwnerGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new service (salon only)' })
   @ApiResponse({ status: 201, description: 'Service successfully created.' })
@@ -61,7 +62,7 @@ export class ServicesController {
   }
 
   @Patch(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OwnerGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update service (salon only)' })
   @ApiResponse({ status: 200, description: 'Service successfully updated.' })
@@ -71,7 +72,7 @@ export class ServicesController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OwnerGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete service (salon only)' })
   @ApiResponse({ status: 200, description: 'Service successfully deleted.' })

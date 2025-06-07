@@ -21,9 +21,11 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { OwnerGuard } from '../auth/guards/owner.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../shared/enums/user-role.enum';
+
 
 @ApiTags('salons')
 @Controller('salons')
@@ -88,7 +90,7 @@ export class SalonsController {
   }
 
   @Patch(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OwnerGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update salon (salon owner only)' })
   @ApiResponse({ status: 200, description: 'Salon successfully updated.' })
