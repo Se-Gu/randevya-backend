@@ -20,14 +20,23 @@ import {
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { StaffCalendarGuard } from '../auth/guards/staff-calendar.guard';
+import { OwnerGuard } from '../auth/guards/owner.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../shared/enums/user-role.enum';
+import { AnalyticsService } from '../analytics/analytics.service';
+
 
 @ApiTags('staff')
 @Controller('staff')
 export class StaffController {
-  constructor(private readonly staffService: StaffService) {}
+  constructor(
+    private readonly staffService: StaffService,
+    private readonly analyticsService: AnalyticsService,
+  ) {}
 
   @Post()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OwnerGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new staff member (salon only)' })
   @ApiResponse({
@@ -40,7 +49,7 @@ export class StaffController {
   }
 
   @Get()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OwnerGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all staff members (salon only)' })
   @ApiResponse({ status: 200, description: 'Return all staff members.' })
@@ -49,7 +58,7 @@ export class StaffController {
   }
 
   @Get(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OwnerGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get staff member details (salon only)' })
   @ApiResponse({ status: 200, description: 'Return the staff member.' })
@@ -71,6 +80,17 @@ export class StaffController {
     return this.staffService.getBookedSlots(id, range, date);
   }
 
+  @Get(':id/metrics')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.OWNER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get analytics for a staff member (owner only)' })
+  @ApiResponse({ status: 200, description: 'Return metrics for the staff member.' })
+  getMetrics(@Param('id') id: string) {
+    return this.analyticsService.getStaffMetrics(id);
+  }
+
+
   @Get('salon/:salonId')
   @ApiOperation({ summary: 'Get all staff members for a salon (public)' })
   @ApiResponse({
@@ -83,7 +103,7 @@ export class StaffController {
   }
 
   @Patch(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OwnerGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update staff member (salon only)' })
   @ApiResponse({
@@ -96,7 +116,7 @@ export class StaffController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OwnerGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete staff member (salon only)' })
   @ApiResponse({

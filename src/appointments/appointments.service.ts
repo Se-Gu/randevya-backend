@@ -1,21 +1,71 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  Injectable,
+  NotFoundException,
+  BadRequestException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Appointment } from './entities/appointment.entity';
 import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { v4 as uuidv4 } from 'uuid';
+import { Staff } from '../staff/entities';
 
 @Injectable()
 export class AppointmentsService {
   constructor(
     @InjectRepository(Appointment)
     private readonly appointmentRepository: Repository<Appointment>,
+    @InjectRepository(Staff)
+    private readonly staffRepository: Repository<Staff>,
   ) {}
 
   async create(
     createAppointmentDto: CreateAppointmentDto,
   ): Promise<Appointment> {
+    const { staffId, salonId, date, time } = createAppointmentDto;
+
+    if (staffId) {
+      const staff = await this.staffRepository.findOne({ where: { id: staffId } });
+      if (!staff) {
+        throw new NotFoundException(`Staff member with ID ${staffId} not found`);
+      }
+      if (staff.salonId !== salonId) {
+        throw new BadRequestException(
+          'Staff member does not belong to the specified salon',
+        );
+      }
+
+      const appointmentDay = new Date(date).toLocaleString('en-US', {
+        weekday: 'long',
+        timeZone: 'UTC',
+      });
+      const workingDay = staff.workingHours.find(
+        (wh) => wh.day === appointmentDay,
+      );
+
+      const withinWorkingHours =
+        workingDay?.slots.some(
+          (slot) => slot.start <= time && time < slot.end,
+        ) ?? false;
+
+      if (!withinWorkingHours) {
+        throw new BadRequestException(
+          'Requested time is outside of staff working hours',
+        );
+      }
+
+      const conflict = await this.appointmentRepository.findOne({
+        where: { staffId, date, time },
+      });
+
+      if (conflict) {
+        throw new BadRequestException(
+          'Staff already has an appointment at the requested time',
+        );
+      }
+    }
+
     const appointment = this.appointmentRepository.create({
       ...createAppointmentDto,
       accessToken: uuidv4(),
