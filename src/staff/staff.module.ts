@@ -3,11 +3,16 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { StaffService } from './staff.service';
 import { StaffController } from './staff.controller';
 import { Staff } from './entities/staff.entity';
+import { Appointment } from '../appointments/entities/appointment.entity';
+import { Service } from '../services/entities/service.entity';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 @Module({
-  imports: [TypeOrmModule.forFeature([Staff])],
+  imports: [
+    TypeOrmModule.forFeature([Staff, Appointment, Service]),
+  ],
   controllers: [StaffController],
-  providers: [StaffService],
-  exports: [StaffService],
+  providers: [StaffService, AnalyticsService],
+  exports: [StaffService, AnalyticsService],
 })
 export class StaffModule {}
