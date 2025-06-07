@@ -18,11 +18,18 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../shared/enums/user-role.enum';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 @ApiTags('staff')
 @Controller('staff')
 export class StaffController {
-  constructor(private readonly staffService: StaffService) {}
+  constructor(
+    private readonly staffService: StaffService,
+    private readonly analyticsService: AnalyticsService,
+  ) {}
 
   @Post()
   @UseGuards(AuthGuard('jwt'))
@@ -54,6 +61,16 @@ export class StaffController {
   @ApiResponse({ status: 404, description: 'Staff member not found.' })
   findOne(@Param('id') id: string) {
     return this.staffService.findOne(id);
+  }
+
+  @Get(':id/metrics')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.OWNER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get analytics for a staff member (owner only)' })
+  @ApiResponse({ status: 200, description: 'Return metrics for the staff member.' })
+  getMetrics(@Param('id') id: string) {
+    return this.analyticsService.getStaffMetrics(id);
   }
 
   @Get('salon/:salonId')
