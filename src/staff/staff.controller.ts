@@ -7,6 +7,7 @@ import {
   Param,
   Delete,
   UseGuards,
+  Query,
 } from '@nestjs/common';
 import { StaffService } from './staff.service';
 import { CreateStaffDto } from './dto/create-staff.dto';
@@ -18,6 +19,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { StaffCalendarGuard } from '../auth/guards/staff-calendar.guard';
 import { OwnerGuard } from '../auth/guards/owner.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
@@ -65,6 +67,19 @@ export class StaffController {
     return this.staffService.findOne(id);
   }
 
+  @Get(':id/calendar')
+  @UseGuards(AuthGuard('jwt'), StaffCalendarGuard)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get staff calendar' })
+  @ApiResponse({ status: 200, description: 'Return staff booked slots.' })
+  getCalendar(
+    @Param('id') id: string,
+    @Query('range') range: 'day' | 'week' | 'month' = 'day',
+    @Query('date') date: string,
+  ) {
+    return this.staffService.getBookedSlots(id, range, date);
+  }
+
   @Get(':id/metrics')
   @UseGuards(AuthGuard('jwt'), RolesGuard)
   @Roles(UserRole.OWNER)
@@ -74,6 +89,7 @@ export class StaffController {
   getMetrics(@Param('id') id: string) {
     return this.analyticsService.getStaffMetrics(id);
   }
+
 
   @Get('salon/:salonId')
   @ApiOperation({ summary: 'Get all staff members for a salon (public)' })
