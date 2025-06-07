@@ -64,7 +64,9 @@ export class StaffService {
   ) {
     await this.findOne(staffId);
 
-    const date = new Date(dateStr);
+    const [year, month, day] = dateStr.split('-').map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+
     if (isNaN(date.getTime())) {
       throw new BadRequestException('Invalid date');
     }
@@ -73,8 +75,8 @@ export class StaffService {
     let end = new Date(date);
 
     if (range === 'week') {
-      const day = (start.getUTCDay() + 6) % 7; // Monday=0
-      start.setUTCDate(start.getUTCDate() - day);
+      const dayOfWeek = (start.getUTCDay() + 6) % 7; // Monday=0
+      start.setUTCDate(start.getUTCDate() - dayOfWeek);
       end = new Date(start);
       end.setUTCDate(start.getUTCDate() + 6);
     } else if (range === 'month') {
