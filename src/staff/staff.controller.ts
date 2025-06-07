@@ -18,6 +18,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { OwnerGuard } from '../auth/guards/owner.guard';
 
 @ApiTags('staff')
 @Controller('staff')
@@ -25,7 +26,7 @@ export class StaffController {
   constructor(private readonly staffService: StaffService) {}
 
   @Post()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OwnerGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Create a new staff member (salon only)' })
   @ApiResponse({
@@ -38,7 +39,7 @@ export class StaffController {
   }
 
   @Get()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OwnerGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all staff members (salon only)' })
   @ApiResponse({ status: 200, description: 'Return all staff members.' })
@@ -47,7 +48,7 @@ export class StaffController {
   }
 
   @Get(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OwnerGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get staff member details (salon only)' })
   @ApiResponse({ status: 200, description: 'Return the staff member.' })
@@ -68,7 +69,7 @@ export class StaffController {
   }
 
   @Patch(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OwnerGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update staff member (salon only)' })
   @ApiResponse({
@@ -81,7 +82,7 @@ export class StaffController {
   }
 
   @Delete(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), OwnerGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Delete staff member (salon only)' })
   @ApiResponse({

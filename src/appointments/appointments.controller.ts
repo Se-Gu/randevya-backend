@@ -19,6 +19,7 @@ import {
   ApiBearerAuth,
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
+import { StaffGuard } from '../auth/guards/staff.guard';
 import { AccessTokenGuard } from '../auth/guards/access-token.guard';
 
 @ApiTags('appointments')
@@ -38,7 +39,7 @@ export class AppointmentsController {
   }
 
   @Get()
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), StaffGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get all appointments (salon only)' })
   @ApiResponse({ status: 200, description: 'Return all appointments.' })
@@ -56,7 +57,7 @@ export class AppointmentsController {
   }
 
   @Get(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), StaffGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get appointment by ID (salon only)' })
   @ApiResponse({ status: 200, description: 'Return the appointment.' })
@@ -66,7 +67,7 @@ export class AppointmentsController {
   }
 
   @Patch(':id')
-  @UseGuards(AuthGuard('jwt'))
+  @UseGuards(AuthGuard('jwt'), StaffGuard)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Update appointment (salon only)' })
   @ApiResponse({
