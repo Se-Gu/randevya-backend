@@ -24,8 +24,7 @@ import { OwnerGuard } from '../auth/guards/owner.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../shared/enums/user-role.enum';
-import { AnalyticsService } from '../analytics/analytics.service';
-
+import { AnalyticsService, StaffMetrics } from '../analytics/analytics.service';
 
 @ApiTags('staff')
 @Controller('staff')
@@ -85,11 +84,13 @@ export class StaffController {
   @Roles(UserRole.OWNER)
   @ApiBearerAuth()
   @ApiOperation({ summary: 'Get analytics for a staff member (owner only)' })
-  @ApiResponse({ status: 200, description: 'Return metrics for the staff member.' })
-  getMetrics(@Param('id') id: string) {
+  @ApiResponse({
+    status: 200,
+    description: 'Return metrics for the staff member.',
+  })
+  getMetrics(@Param('id') id: string): Promise<StaffMetrics> {
     return this.analyticsService.getStaffMetrics(id);
   }
-
 
   @Get('salon/:salonId')
   @ApiOperation({ summary: 'Get all staff members for a salon (public)' })

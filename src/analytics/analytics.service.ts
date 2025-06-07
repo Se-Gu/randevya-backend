@@ -5,7 +5,7 @@ import { Appointment } from '../appointments/entities/appointment.entity';
 import { Service } from '../services/entities/service.entity';
 import { Staff } from '../staff/entities/staff.entity';
 
-interface StaffMetrics {
+export interface StaffMetrics {
   appointmentCount: number;
   revenue: number;
   mostBookedService: {
@@ -28,7 +28,9 @@ export class AnalyticsService {
   ) {}
 
   async getStaffMetrics(staffId: string): Promise<StaffMetrics> {
-    const staff = await this.staffRepository.findOne({ where: { id: staffId } });
+    const staff = await this.staffRepository.findOne({
+      where: { id: staffId },
+    });
     if (!staff) {
       throw new NotFoundException(`Staff member with ID ${staffId} not found`);
     }
@@ -83,9 +85,7 @@ export class AnalyticsService {
       );
     }, 0);
 
-    const utilizationRate = workingMinutes
-      ? bookedMinutes / workingMinutes
-      : 0;
+    const utilizationRate = workingMinutes ? bookedMinutes / workingMinutes : 0;
 
     return {
       appointmentCount,
