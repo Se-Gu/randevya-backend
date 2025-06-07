@@ -8,8 +8,10 @@ import {
   Delete,
   UseGuards,
   Request,
+  Query,
 } from '@nestjs/common';
 import { SalonsService } from './salons.service';
+import { CalendarService, CalendarView } from './calendar.service';
 import { CreateSalonDto } from './dto/create-salon.dto';
 import { UpdateSalonDto } from './dto/update-salon.dto';
 import {
@@ -20,11 +22,18 @@ import {
 } from '@nestjs/swagger';
 import { AuthGuard } from '@nestjs/passport';
 import { OwnerGuard } from '../auth/guards/owner.guard';
+import { RolesGuard } from '../auth/guards/roles.guard';
+import { Roles } from '../auth/decorators/roles.decorator';
+import { UserRole } from '../shared/enums/user-role.enum';
+
 
 @ApiTags('salons')
 @Controller('salons')
 export class SalonsController {
-  constructor(private readonly salonsService: SalonsService) {}
+  constructor(
+    private readonly salonsService: SalonsService,
+    private readonly calendarService: CalendarService,
+  ) {}
 
   @Post()
   @ApiOperation({ summary: 'Create a new salon' })
@@ -63,6 +72,21 @@ export class SalonsController {
   @ApiResponse({ status: 404, description: 'Salon not found.' })
   findAvailability(@Param('id') id: string) {
     return this.salonsService.findAvailability(id);
+  }
+
+  @Get(':id/calendar')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.OWNER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get aggregated salon calendar (owner only)' })
+  @ApiResponse({ status: 200, description: 'Return salon calendar.' })
+  getCalendar(
+    @Param('id') id: string,
+    @Query('view') view: CalendarView = 'month',
+  ) {
+    const calendarView: CalendarView =
+      view === 'day' || view === 'week' || view === 'month' ? view : 'month';
+    return this.calendarService.getSalonCalendar(id, calendarView);
   }
 
   @Patch(':id')
