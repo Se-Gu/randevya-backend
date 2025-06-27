@@ -5,6 +5,7 @@ import { Salon } from './entities/salon.entity';
 import { CreateSalonDto } from './dto/create-salon.dto';
 import { UpdateSalonDto } from './dto/update-salon.dto';
 import { Service } from '../services/entities/service.entity';
+import { StaffService } from '../staff/staff.service';
 
 @Injectable()
 export class SalonsService {
@@ -13,6 +14,7 @@ export class SalonsService {
     private readonly salonRepository: Repository<Salon>,
     @InjectRepository(Service)
     private readonly servicesRepository: Repository<Service>,
+    private readonly staffService: StaffService,
   ) {}
 
   async create(createSalonDto: CreateSalonDto): Promise<Salon> {
@@ -48,9 +50,12 @@ export class SalonsService {
   }
 
   private async getStaffAvailability(salonId: string): Promise<any[]> {
-    // This would be implemented to get staff working hours
-    // For now, returning an empty array
-    return [];
+    const staffMembers = await this.staffService.findBySalon(salonId);
+    return staffMembers.map((s) => ({
+      staffId: s.id,
+      name: s.name,
+      workingHours: s.workingHours,
+    }));
   }
 
   async update(id: string, updateSalonDto: UpdateSalonDto): Promise<Salon> {

@@ -4,6 +4,7 @@ import { Repository } from 'typeorm';
 import { Appointment } from '../appointments/entities/appointment.entity';
 import { Service } from '../services/entities/service.entity';
 import { Staff } from '../staff/entities/staff.entity';
+import { Salon } from '../salons/entities/salon.entity';
 
 export interface StaffMetrics {
   appointmentCount: number;
@@ -16,6 +17,12 @@ export interface StaffMetrics {
   utilizationRate: number;
 }
 
+export interface SalonMetrics {
+  appointmentCount: number;
+  revenue: number;
+  utilizationRate: number;
+}
+
 @Injectable()
 export class AnalyticsService {
   constructor(
@@ -25,6 +32,8 @@ export class AnalyticsService {
     private readonly serviceRepository: Repository<Service>,
     @InjectRepository(Staff)
     private readonly staffRepository: Repository<Staff>,
+    @InjectRepository(Salon)
+    private readonly salonRepository: Repository<Salon>,
   ) {}
 
   async getStaffMetrics(staffId: string): Promise<StaffMetrics> {
@@ -93,5 +102,55 @@ export class AnalyticsService {
       mostBookedService,
       utilizationRate,
     };
+  }
+
+  async getSalonMetrics(salonId: string): Promise<SalonMetrics> {
+    const salon = await this.salonRepository.findOne({ where: { id: salonId } });
+    if (!salon) {
+      throw new NotFoundException(`Salon with ID ${salonId} not found`);
+    }
+
+    const baseQuery = this.appointmentRepository
+      .createQueryBuilder('appointment')
+      .leftJoin('appointment.service', 'service')
+      .where('appointment.salonId = :salonId', { salonId });
+
+    const appointmentCount = await baseQuery.getCount();
+
+    const revenueResult = await baseQuery
+      .select('SUM(service.price)', 'revenue')
+      .getRawOne<{ revenue: string }>();
+    const revenue = parseFloat(revenueResult?.revenue ?? '0');
+
+    const durationResult = await baseQuery
+      .select('SUM(service.durationMinutes)', 'duration')
+      .getRawOne<{ duration: string }>();
+    const bookedMinutes = parseInt(durationResult?.duration ?? '0', 10);
+
+    const staffMembers = await this.staffRepository.find({
+      where: { salonId },
+    });
+
+    const workingMinutes = staffMembers.reduce((total, staff) => {
+      return (
+        total +
+        staff.workingHours.reduce((dayAcc, day) => {
+          return (
+            dayAcc +
+            day.slots.reduce((slotAcc, slot) => {
+              const [sh, sm] = slot.start.split(':').map(Number);
+              const [eh, em] = slot.end.split(':').map(Number);
+              return slotAcc + (eh * 60 + em - (sh * 60 + sm));
+            }, 0)
+          );
+        }, 0)
+      );
+    }, 0);
+
+    const utilizationRate = workingMinutes
+      ? bookedMinutes / workingMinutes
+      : 0;
+
+    return { appointmentCount, revenue, utilizationRate };
   }
 }

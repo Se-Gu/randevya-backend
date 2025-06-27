@@ -11,6 +11,7 @@ import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { Staff } from '../staff/entities';
 import { StaffService } from '../staff/staff.service';
+import { NotificationService } from '../notifications/notification.service';
 
 @Injectable()
 export class AppointmentsService {
@@ -20,6 +21,7 @@ export class AppointmentsService {
     @InjectRepository(Staff)
     private readonly staffRepository: Repository<Staff>,
     private readonly staffService: StaffService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   async create(
@@ -30,9 +32,13 @@ export class AppointmentsService {
     let selectedStaffId = staffId;
 
     if (staffId) {
-      const staff = await this.staffRepository.findOne({ where: { id: staffId } });
+      const staff = await this.staffRepository.findOne({
+        where: { id: staffId },
+      });
       if (!staff) {
-        throw new NotFoundException(`Staff member with ID ${staffId} not found`);
+        throw new NotFoundException(
+          `Staff member with ID ${staffId} not found`,
+        );
       }
       if (staff.salonId !== salonId) {
         throw new BadRequestException(
@@ -105,7 +111,9 @@ export class AppointmentsService {
       ...createAppointmentDto,
       accessToken: uuidv4(),
     });
-    return await this.appointmentRepository.save(appointment);
+    const saved = await this.appointmentRepository.save(appointment);
+    await this.notifyAppointment('created', saved);
+    return saved;
   }
 
   async findAll(): Promise<Appointment[]> {
@@ -146,11 +154,34 @@ export class AppointmentsService {
   ): Promise<Appointment> {
     const appointment = await this.findOne(id);
     Object.assign(appointment, updateAppointmentDto);
-    return await this.appointmentRepository.save(appointment);
+    const saved = await this.appointmentRepository.save(appointment);
+    await this.notifyAppointment('updated', saved);
+    return saved;
   }
 
   async remove(id: string): Promise<void> {
     const appointment = await this.findOne(id);
     await this.appointmentRepository.remove(appointment);
+    await this.notifyAppointment('deleted', appointment);
+  }
+
+  private async notifyAppointment(
+    action: 'created' | 'updated' | 'deleted',
+    appointment: Appointment,
+  ) {
+    const message = `Your appointment on ${appointment.date} at ${appointment.time} was ${action}.`;
+    if (appointment.customerEmail) {
+      await this.notificationService.sendEmail(
+        appointment.customerEmail,
+        `Appointment ${action}`,
+        message,
+      );
+    }
+    if (appointment.customerPhone) {
+      await this.notificationService.sendSms(
+        appointment.customerPhone,
+        message,
+      );
+    }
   }
 }
