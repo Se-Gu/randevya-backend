@@ -43,6 +43,11 @@ DB_PASSWORD=your_password
 DB_DATABASE=randevya
 JWT_SECRET=your_jwt_secret
 JWT_EXPIRATION=1d
+SENDGRID_API_KEY=your_sendgrid_api_key
+SENDGRID_FROM_EMAIL=no-reply@randevya.com
+TWILIO_ACCOUNT_SID=your_twilio_account_sid
+TWILIO_AUTH_TOKEN=your_twilio_auth_token
+TWILIO_PHONE_NUMBER=+15551234567
 ```
 
 4. Run database migrations:

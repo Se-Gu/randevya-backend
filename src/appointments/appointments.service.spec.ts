@@ -6,11 +6,16 @@ import { Appointment } from './entities/appointment.entity';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { Staff } from '../staff/entities';
 import { AppointmentStatus } from '../shared/enums/appointment-status.enum';
+import { NotificationService } from '../notifications/notification.service';
 
 describe('AppointmentsService', () => {
   let service: AppointmentsService;
   let appointmentRepository: Repository<Appointment>;
   let staffRepository: Repository<Staff>;
+  const mockNotificationService = {
+    sendEmail: jest.fn(),
+    sendSms: jest.fn(),
+  };
 
   const mockAppointment = {
     id: '1',
@@ -35,7 +40,9 @@ describe('AppointmentsService', () => {
       ),
     findOne: jest.fn().mockImplementation(({ where }) => {
       if (where.id) {
-        return where.id === '1' ? Promise.resolve(mockAppointment) : Promise.resolve(null);
+        return where.id === '1'
+          ? Promise.resolve(mockAppointment)
+          : Promise.resolve(null);
       }
       return Promise.resolve(null);
     }),
@@ -79,6 +86,10 @@ describe('AppointmentsService', () => {
         {
           provide: getRepositoryToken(Staff),
           useValue: mockStaffRepository,
+        },
+        {
+          provide: NotificationService,
+          useValue: mockNotificationService,
         },
       ],
     }).compile();
@@ -135,7 +146,10 @@ describe('AppointmentsService', () => {
     });
 
     it('should throw BadRequestException if staff belongs to another salon', async () => {
-      mockStaffRepository.findOne.mockResolvedValueOnce({ ...mockStaff, salonId: 'other' });
+      mockStaffRepository.findOne.mockResolvedValueOnce({
+        ...mockStaff,
+        salonId: 'other',
+      });
 
       const dto = {
         customerName: 'John Doe',
