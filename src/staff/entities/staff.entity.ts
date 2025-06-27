@@ -12,6 +12,7 @@ import { ApiProperty } from '@nestjs/swagger';
 import { Salon } from '../../salons/entities/salon.entity';
 import { WeeklyAvailability } from '../../shared/types/weekly-availability.type';
 import { Appointment } from '../../appointments/entities/appointment.entity';
+import { User } from '../../users/entities/user.entity';
 
 @Entity('staff')
 export class Staff {
@@ -29,6 +30,14 @@ export class Staff {
   @Column('uuid')
   salonId: string;
 
+  @ApiProperty({
+    example: 'usr1a2b3-c4d5-e6f7-g8h9-i0j1k2l3m4n5',
+    description: 'ID of the user associated with this staff member',
+    required: false,
+  })
+  @Column('uuid', { nullable: true })
+  userId?: string;
+
   @ApiProperty({ example: 'John Doe', description: 'Name of the staff member' })
   @Column()
   name: string;
@@ -42,6 +51,10 @@ export class Staff {
   @ManyToOne(() => Salon, (salon) => salon.staff, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'salonId' })
   salon: Salon;
+
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
+  @JoinColumn({ name: 'userId' })
+  user?: User;
 
   @OneToMany(() => Appointment, (appointment) => appointment.staff)
   appointments: Appointment[];
