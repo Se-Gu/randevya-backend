@@ -10,6 +10,7 @@ import { CreateAppointmentDto } from './dto/create-appointment.dto';
 import { UpdateAppointmentDto } from './dto/update-appointment.dto';
 import { v4 as uuidv4 } from 'uuid';
 import { Staff } from '../staff/entities';
+import { StaffService } from '../staff/staff.service';
 import { NotificationService } from '../notifications/notification.service';
 
 @Injectable()
@@ -19,6 +20,7 @@ export class AppointmentsService {
     private readonly appointmentRepository: Repository<Appointment>,
     @InjectRepository(Staff)
     private readonly staffRepository: Repository<Staff>,
+    private readonly staffService: StaffService,
     private readonly notificationService: NotificationService,
   ) {}
 
@@ -26,6 +28,8 @@ export class AppointmentsService {
     createAppointmentDto: CreateAppointmentDto,
   ): Promise<Appointment> {
     const { staffId, salonId, date, time } = createAppointmentDto;
+
+    let selectedStaffId = staffId;
 
     if (staffId) {
       const staff = await this.staffRepository.findOne({
@@ -70,6 +74,37 @@ export class AppointmentsService {
           'Staff already has an appointment at the requested time',
         );
       }
+    } else {
+      const staffMembers = await this.staffService.findBySalon(salonId);
+
+      for (const staff of staffMembers) {
+        const appointmentDay = new Date(date).toLocaleString('en-US', {
+          weekday: 'long',
+          timeZone: 'UTC',
+        });
+        const workingDay = staff.workingHours.find((wh) => wh.day === appointmentDay);
+
+        const withinWorkingHours =
+          workingDay?.slots.some((slot) => slot.start <= time && time < slot.end) ?? false;
+
+        if (!withinWorkingHours) {
+          continue;
+        }
+
+        const booked = await this.staffService.getBookedSlots(staff.id, 'day', date);
+
+        const hasConflict = booked.some((b) => b.time === time);
+
+        if (!hasConflict) {
+          selectedStaffId = staff.id;
+          break;
+        }
+      }
+
+      if (!selectedStaffId) {
+        throw new BadRequestException('No available staff at the requested time');
+      }
+      createAppointmentDto.staffId = selectedStaffId;
     }
 
     const appointment = this.appointmentRepository.create({
