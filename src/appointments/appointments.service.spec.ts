@@ -5,12 +5,14 @@ import { AppointmentsService } from './appointments.service';
 import { Appointment } from './entities/appointment.entity';
 import { NotFoundException, BadRequestException } from '@nestjs/common';
 import { Staff } from '../staff/entities';
+import { StaffService } from '../staff/staff.service';
 import { AppointmentStatus } from '../shared/enums/appointment-status.enum';
 
 describe('AppointmentsService', () => {
   let service: AppointmentsService;
   let appointmentRepository: Repository<Appointment>;
   let staffRepository: Repository<Staff>;
+  let staffService: StaffService;
 
   const mockAppointment = {
     id: '1',
@@ -68,6 +70,11 @@ describe('AppointmentsService', () => {
     }),
   };
 
+  const mockStaffService = {
+    findBySalon: jest.fn(),
+    getBookedSlots: jest.fn(),
+  };
+
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
       providers: [
@@ -80,15 +87,20 @@ describe('AppointmentsService', () => {
           provide: getRepositoryToken(Staff),
           useValue: mockStaffRepository,
         },
+        {
+          provide: StaffService,
+          useValue: mockStaffService,
+        },
       ],
     }).compile();
 
     service = module.get<AppointmentsService>(AppointmentsService);
-    appointmentRepository = module.get<Repository<Appointment>>(
-      getRepositoryToken(Appointment),
-    );
-    staffRepository = module.get<Repository<Staff>>(getRepositoryToken(Staff));
-  });
+  appointmentRepository = module.get<Repository<Appointment>>(
+    getRepositoryToken(Appointment),
+  );
+  staffRepository = module.get<Repository<Staff>>(getRepositoryToken(Staff));
+  staffService = module.get<StaffService>(StaffService);
+});
 
   it('should be defined', () => {
     expect(service).toBeDefined();
@@ -191,6 +203,44 @@ describe('AppointmentsService', () => {
         serviceId: 'service-1',
         staffId: 'staff-1',
       };
+
+      await expect(service.create(dto)).rejects.toThrow(BadRequestException);
+    });
+
+    it('should assign an available staff member when none is specified', async () => {
+      mockStaffService.findBySalon.mockResolvedValue([mockStaff]);
+      mockStaffService.getBookedSlots.mockResolvedValue([]);
+
+      const dto = {
+        customerName: 'John Doe',
+        customerPhone: '+1234567890',
+        date: '2024-03-20',
+        time: '14:30',
+        salonId: 'salon-1',
+        serviceId: 'service-1',
+      } as any;
+
+      const result = await service.create(dto);
+      expect(result.staffId).toBe('staff-1');
+      expect(appointmentRepository.create).toHaveBeenCalledWith({
+        ...dto,
+        staffId: 'staff-1',
+        accessToken: expect.any(String),
+      });
+    });
+
+    it('should throw BadRequestException if no staff is available', async () => {
+      mockStaffService.findBySalon.mockResolvedValue([mockStaff]);
+      mockStaffService.getBookedSlots.mockResolvedValue([mockAppointment]);
+
+      const dto = {
+        customerName: 'John Doe',
+        customerPhone: '+1234567890',
+        date: '2024-03-20',
+        time: '14:30',
+        salonId: 'salon-1',
+        serviceId: 'service-1',
+      } as any;
 
       await expect(service.create(dto)).rejects.toThrow(BadRequestException);
     });
