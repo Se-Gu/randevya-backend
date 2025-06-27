@@ -56,7 +56,7 @@ TWILIO_PHONE_NUMBER=+15551234567
 npm run migration:run
 ```
 
-5. Seed the system admin:
+5. Seed initial data (system admin, salons and demo users):
 
 ```bash
 npm run seed:system-admin
