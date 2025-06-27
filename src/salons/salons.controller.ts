@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { SalonsService } from './salons.service';
 import { CalendarService, CalendarView } from './calendar.service';
+import { AnalyticsService, SalonMetrics } from '../analytics/analytics.service';
 import { CreateSalonDto } from './dto/create-salon.dto';
 import { UpdateSalonDto } from './dto/update-salon.dto';
 import {
@@ -32,6 +33,7 @@ export class SalonsController {
   constructor(
     private readonly salonsService: SalonsService,
     private readonly calendarService: CalendarService,
+    private readonly analyticsService: AnalyticsService,
   ) {}
 
   @Post()
@@ -96,6 +98,16 @@ export class SalonsController {
     const calendarView: CalendarView =
       view === 'day' || view === 'week' || view === 'month' ? view : 'month';
     return this.calendarService.getSalonCalendar(id, calendarView);
+  }
+
+  @Get(':id/metrics')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.OWNER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get analytics for a salon (owner only)' })
+  @ApiResponse({ status: 200, description: 'Return salon metrics.' })
+  getMetrics(@Param('id') id: string): Promise<SalonMetrics> {
+    return this.analyticsService.getSalonMetrics(id);
   }
 
   @Patch(':id')
