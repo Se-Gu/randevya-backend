@@ -6,7 +6,10 @@ export class StaffGuard implements CanActivate {
   canActivate(context: ExecutionContext): boolean {
     const request = context.switchToHttp().getRequest();
     const user = request.user;
-    if (!user || user.role !== UserRole.STAFF) {
+    if (
+      !user ||
+      (user.role !== UserRole.STAFF && user.role !== UserRole.OWNER)
+    ) {
       return false;
     }
     const salonId = request.params.salonId || request.body?.salonId;

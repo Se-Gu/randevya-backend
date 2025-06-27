@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import { SalonsService } from './salons.service';
 import { CalendarService, CalendarView } from './calendar.service';
+import { AnalyticsService, SalonMetrics } from '../analytics/analytics.service';
 import { CreateSalonDto } from './dto/create-salon.dto';
 import { UpdateSalonDto } from './dto/update-salon.dto';
 import {
@@ -26,13 +27,13 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { UserRole } from '../shared/enums/user-role.enum';
 
-
 @ApiTags('salons')
 @Controller('salons')
 export class SalonsController {
   constructor(
     private readonly salonsService: SalonsService,
     private readonly calendarService: CalendarService,
+    private readonly analyticsService: AnalyticsService,
   ) {}
 
   @Post()
@@ -48,6 +49,16 @@ export class SalonsController {
   @ApiResponse({ status: 200, description: 'Return all salons.' })
   findAll() {
     return this.salonsService.findAll();
+  }
+
+  @Get('me')
+  @UseGuards(AuthGuard('jwt'))
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get current salon details' })
+  @ApiResponse({ status: 200, description: 'Return the current salon.' })
+  @ApiResponse({ status: 401, description: 'Unauthorized.' })
+  getMe(@Request() req) {
+    return this.salonsService.findOne(req.user.salonId);
   }
 
   @Get(':id')
@@ -89,6 +100,16 @@ export class SalonsController {
     return this.calendarService.getSalonCalendar(id, calendarView);
   }
 
+  @Get(':id/metrics')
+  @UseGuards(AuthGuard('jwt'), RolesGuard)
+  @Roles(UserRole.OWNER)
+  @ApiBearerAuth()
+  @ApiOperation({ summary: 'Get analytics for a salon (owner only)' })
+  @ApiResponse({ status: 200, description: 'Return salon metrics.' })
+  getMetrics(@Param('id') id: string): Promise<SalonMetrics> {
+    return this.analyticsService.getSalonMetrics(id);
+  }
+
   @Patch(':id')
   @UseGuards(AuthGuard('jwt'), OwnerGuard)
   @ApiBearerAuth()
@@ -107,15 +128,5 @@ export class SalonsController {
   @ApiResponse({ status: 404, description: 'Salon not found.' })
   remove(@Param('id') id: string) {
     return this.salonsService.remove(id);
-  }
-
-  @Get('me')
-  @UseGuards(AuthGuard('jwt'))
-  @ApiBearerAuth()
-  @ApiOperation({ summary: 'Get current salon details' })
-  @ApiResponse({ status: 200, description: 'Return the current salon.' })
-  @ApiResponse({ status: 401, description: 'Unauthorized.' })
-  getMe(@Request() req) {
-    return this.salonsService.findOne(req.user.salonId);
   }
 }

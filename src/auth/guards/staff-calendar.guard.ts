@@ -21,7 +21,7 @@ export class StaffCalendarGuard implements CanActivate {
       return true;
     }
 
-    if (user.role === UserRole.STAFF && user.id === staffId) {
+    if (user.role === UserRole.STAFF && user.id === staff.userId) {
       return true;
     }
 
