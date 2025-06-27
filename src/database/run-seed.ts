@@ -1,5 +1,6 @@
 import { DataSource } from 'typeorm';
 import { createSystemAdmin } from './seeds/create-system-admin.seed';
+import { createSampleData } from './seeds/create-sample-data.seed';
 import 'dotenv/config';
 
 const dataSource = new DataSource({
@@ -19,6 +20,7 @@ async function runSeed() {
     console.log('Database connection established');
 
     await createSystemAdmin(dataSource);
+    await createSampleData(dataSource);
 
     console.log('Seed completed successfully');
   } catch (error) {

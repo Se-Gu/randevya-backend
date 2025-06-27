@@ -51,7 +51,7 @@ JWT_EXPIRATION=1d
 npm run migration:run
 ```
 
-5. Seed the system admin:
+5. Seed initial data (system admin, salons and demo users):
 
 ```bash
 npm run seed:system-admin
