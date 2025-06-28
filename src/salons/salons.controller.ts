@@ -15,6 +15,7 @@ import { CalendarService, CalendarView } from './calendar.service';
 import { AnalyticsService, SalonMetrics } from '../analytics/analytics.service';
 import { CreateSalonDto } from './dto/create-salon.dto';
 import { UpdateSalonDto } from './dto/update-salon.dto';
+import { ListSalonsDto } from './dto/list-salons.dto';
 import {
   ApiTags,
   ApiOperation,
@@ -46,9 +47,9 @@ export class SalonsController {
 
   @Get()
   @ApiOperation({ summary: 'Get all salons (public)' })
-  @ApiResponse({ status: 200, description: 'Return all salons.' })
-  findAll() {
-    return this.salonsService.findAll();
+  @ApiResponse({ status: 200, description: 'Return salons with pagination.' })
+  findAll(@Query() query: ListSalonsDto) {
+    return this.salonsService.findAll(query);
   }
 
   @Get('me')

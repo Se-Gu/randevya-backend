@@ -6,6 +6,7 @@ import { CreateSalonDto } from './dto/create-salon.dto';
 import { UpdateSalonDto } from './dto/update-salon.dto';
 import { Service } from '../services/entities/service.entity';
 import { StaffService } from '../staff/staff.service';
+import { ListSalonsDto } from './dto/list-salons.dto';
 
 @Injectable()
 export class SalonsService {
@@ -22,8 +23,20 @@ export class SalonsService {
     return await this.salonRepository.save(salon);
   }
 
-  async findAll(): Promise<Salon[]> {
-    return await this.salonRepository.find();
+  async findAll(query: ListSalonsDto = {} as ListSalonsDto): Promise<{ data: Salon[]; total: number; page: number; limit: number }> {
+    const { name, sortBy = 'createdAt', sortOrder = 'ASC', page = 1, limit = 10 } = query;
+
+    const qb = this.salonRepository.createQueryBuilder('salon');
+
+    if (name) {
+      qb.andWhere('salon.name ILIKE :name', { name: `%${name}%` });
+    }
+
+    qb.orderBy(`salon.${sortBy}`, sortOrder as 'ASC' | 'DESC');
+    qb.skip((page - 1) * limit).take(limit);
+
+    const [data, total] = await qb.getManyAndCount();
+    return { data, total, page, limit };
   }
 
   async findOne(id: string): Promise<Salon> {
