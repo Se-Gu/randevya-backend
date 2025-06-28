@@ -43,7 +43,7 @@ export class AdminController {
   @ApiOperation({ summary: 'Get all salons (admin only)' })
   @ApiResponse({ status: 200, description: 'Return all salons.' })
   findAllSalons() {
-    return this.salonsService.findAll();
+    return this.salonsService.findAll({});
   }
 
   @Delete('users/:id')

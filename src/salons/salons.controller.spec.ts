@@ -2,6 +2,7 @@ import { Test, TestingModule } from '@nestjs/testing';
 import { SalonsController } from './salons.controller';
 import { SalonsService } from './salons.service';
 import { CalendarService } from './calendar.service';
+import { AnalyticsService } from '../analytics/analytics.service';
 
 describe('SalonsController', () => {
   let controller: SalonsController;
@@ -15,6 +16,7 @@ describe('SalonsController', () => {
       providers: [
         { provide: SalonsService, useValue: mockSalonsService },
         { provide: CalendarService, useValue: {} },
+        { provide: AnalyticsService, useValue: {} },
       ],
     }).compile();
 

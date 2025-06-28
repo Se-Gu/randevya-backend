@@ -26,6 +26,14 @@ describe('SalonsService', () => {
     weeklyAvailability: [],
   };
 
+  const mockQueryBuilder: any = {
+    andWhere: jest.fn().mockReturnThis(),
+    orderBy: jest.fn().mockReturnThis(),
+    skip: jest.fn().mockReturnThis(),
+    take: jest.fn().mockReturnThis(),
+    getManyAndCount: jest.fn().mockResolvedValue([[mockSalon], 1]),
+  };
+
   const mockSalonRepository = {
     create: jest.fn().mockImplementation((dto) => dto),
     save: jest
@@ -39,6 +47,7 @@ describe('SalonsService', () => {
     }),
     find: jest.fn().mockResolvedValue([mockSalon]),
     remove: jest.fn().mockResolvedValue(true),
+    createQueryBuilder: jest.fn().mockReturnValue(mockQueryBuilder),
   };
 
   const mockServicesRepository = {
@@ -110,9 +119,9 @@ describe('SalonsService', () => {
   });
 
   describe('findAll', () => {
-    it('should return an array of salons', async () => {
-      const result = await service.findAll();
-      expect(result).toEqual([mockSalon]);
+    it('should return paginated salons', async () => {
+      const result = await service.findAll({});
+      expect(result).toEqual({ data: [mockSalon], total: 1, page: 1, limit: 10 });
     });
   });
 
