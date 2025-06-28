@@ -85,6 +85,26 @@ Once the application is running, you can access the Swagger documentation at:
 http://localhost:3000/api
 ```
 
+## API Reference
+
+### `GET /salons`
+
+Retrieve a paginated list of salons. Supports filtering by name, sorting and pagination.
+
+**Query Parameters**
+
+- `name` (string, optional) – filter salons by partial name match.
+- `sortBy` (string, optional, default `createdAt`) – field to sort by (`name` or `createdAt`).
+- `sortOrder` (string, optional, default `ASC`) – sort direction (`ASC` or `DESC`).
+- `page` (number, optional, default `1`) – page number starting from 1.
+- `limit` (number, optional, default `10`) – number of items per page.
+
+**Example**
+
+```http
+GET /salons?name=studio&sortBy=name&sortOrder=DESC&page=2&limit=5
+```
+
 ## Testing
 
 Run unit tests:

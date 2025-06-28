@@ -4,6 +4,7 @@ import { User } from '../../users/entities/user.entity';
 import { Staff } from '../../staff/entities/staff.entity';
 import { UserRole } from '../../shared/enums/user-role.enum';
 import * as bcrypt from 'bcrypt';
+import { DayOfWeek } from '../../shared/enums/days-of-week.enum';
 
 export async function createSampleData(dataSource: DataSource) {
   const salonRepo = dataSource.getRepository(Salon);
@@ -11,11 +12,11 @@ export async function createSampleData(dataSource: DataSource) {
   const staffRepo = dataSource.getRepository(Staff);
 
   const defaultAvailability = [
-    { day: 'Monday', slots: [{ start: '09:00', end: '17:00' }] },
-    { day: 'Tuesday', slots: [{ start: '09:00', end: '17:00' }] },
-    { day: 'Wednesday', slots: [{ start: '09:00', end: '17:00' }] },
-    { day: 'Thursday', slots: [{ start: '09:00', end: '17:00' }] },
-    { day: 'Friday', slots: [{ start: '09:00', end: '17:00' }] },
+    { day: DayOfWeek.MONDAY, slots: [{ start: '09:00', end: '17:00' }] },
+    { day: DayOfWeek.TUESDAY, slots: [{ start: '09:00', end: '17:00' }] },
+    { day: DayOfWeek.WEDNESDAY, slots: [{ start: '09:00', end: '17:00' }] },
+    { day: DayOfWeek.THURSDAY, slots: [{ start: '09:00', end: '17:00' }] },
+    { day: DayOfWeek.FRIDAY, slots: [{ start: '09:00', end: '17:00' }] },
   ];
 
   const salonsData = [
